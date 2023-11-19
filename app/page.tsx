@@ -1,7 +1,6 @@
 import { CountingValleys } from "@/locations/CountingValleys";
-import { Problem } from "@/locations/Problem";
 
-export default function Home() {
+export default function HomePage() {
   return (
     <CountingValleys />
   );
