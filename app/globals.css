@@ -13,3 +13,9 @@ h2 {
     font-weight: bold;
     margin-top: 1rem;
 }
+
+code.dotnet {
+    display: block;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+}

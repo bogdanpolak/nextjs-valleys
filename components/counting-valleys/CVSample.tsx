@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { ValleysDiagram } from "./ValleysDiagram";
+import { ValleysDiagram } from "../ValleysDiagram";
 
 type ApiResult = { path: string; valleys: number };
 
-export function Solution() {
-  const [path, setPath] = useState<string>("");
+export function CVSample() {
+  const [path, setPath] = useState<string>("UDDDUDUU");
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<ApiResult | null>(null);
+  const [error, setError] = useState<string>("");
 
   const handlePathChanged = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -25,18 +26,20 @@ export function Solution() {
 
   const apiCallCountingValleys = () => {
     setResult(null);
-    // apiRequest(path).then((data) => setResult(data));
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setResult({ path: path, valleys: path.length });
-    }, 600);
+    apiRequest(path)
+      .then((data) => setResult(data))
+      .catch((error) => setError(error))
+      .finally(() => setLoading(false));
 
     async function apiRequest(path: string): Promise<ApiResult> {
-      const response = await fetch(
-        `https://localhost:7147/Solution/CountingValleys(${path})`
-      );
-      return await response.json();
+      const response = await fetch(`/api/count-valleys?path=${path}`);
+      if (response.status === 500)
+        throw new Error('500 Internal Server Error');
+      const data = await response.json();
+      if (response.status === 400)
+        throw new Error(data.error);
+      return data;
     }
   };
 
@@ -48,42 +51,46 @@ export function Solution() {
 
   const samples: string[] = [
     "UDDDUDUU",
+    "DUUUUDDUUDDUUDDD",
     "DDUDUUUUUDDUDDUDDU",
     "DDDUUDUUUUUDDUDDDU",
   ];
 
   return (
-    <main className="max-w-5xl mx-auto px-2">
-      <section className="flex mt-2">
-        <div className="mt-3 flex-grow-0">Path:</div>
-        <div className="ms-2 flex-grow">
-          <div className="flex items-center">
-            <input
-              className="appearance-none bg-transparent bg-teal-100 border border-teal-600 w-full text-gray-700 mr-1 py-2 px-2 leading-tight focus:outline-none"
-              type="text"
-              aria-label="Full name"
-              value={path}
-              onChange={handlePathChanged}
-              onKeyDown={handlePathInputKeyDown}
-            />
-            <button
-              className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
-              type="button"
-              onClick={apiCallCountingValleys}
-            >
-              Count Valleys
-            </button>
+    <>
+      <section className="mt-2">
+        <h2>Sample</h2>
+        <div className="flex mt-2">
+          <div className="mt-3 flex-grow-0">Path:</div>
+          <div className="ms-2 flex-grow">
+            <div className="flex items-center">
+              <input
+                className="appearance-none bg-transparent bg-teal-100 border border-teal-600 w-full text-gray-700 mr-1 py-2 px-2 leading-tight focus:outline-none"
+                type="text"
+                aria-label="Full name"
+                value={path}
+                onChange={handlePathChanged}
+                onKeyDown={handlePathInputKeyDown}
+              />
+              <button
+                className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+                type="button"
+                onClick={apiCallCountingValleys}
+              >
+                Count Valleys
+              </button>
+            </div>
+            <p className="text-green-700 text-xs italic">
+              Enter the hiker path: type <code>D</code> or <code>U</code> on the
+              keyboard. <code className="ms-2">Enter</code> will call the Count
+              Valleys api with the path
+            </p>
           </div>
-          <p className="text-green-700 text-xs italic">
-            Enter the hiker path: type <code>D</code> or <code>U</code> on the
-            keyboard. <code className="ms-2">Enter</code> will call the Count
-            Valleys api with the path
-          </p>
         </div>
       </section>
       <section className="mt-2">
         <div className="px-4 py-2 border border-info rounded">
-          {!loading && !result && <>&nbsp;</>}
+          {!loading && !result && !error && <>&nbsp;</>}
           {loading && (
             <div role="status">
               <svg
@@ -109,7 +116,9 @@ export function Solution() {
             <>
               <span className="me-1 py-1 px-3 rounded bg-slate-300">Input</span>
               <code className="tracking-widest">{result.path}</code>
-              <span className="ms-5 me-1 py-1 px-3 rounded bg-slate-300">Output</span>
+              <span className="ms-5 me-1 py-1 px-3 rounded bg-slate-300">
+                Output
+              </span>
               <code>{result.valleys}</code>
             </>
           )}
@@ -119,7 +128,7 @@ export function Solution() {
         <ValleysDiagram path={path} />
       </section>
       <h3>Samples</h3>
-      <section className="ms-5 py-2">
+      <section className="ms-5 py-2 space-y-2">
         {samples.map((sample) => (
           <button
             key={sample}
@@ -132,6 +141,6 @@ export function Solution() {
           </button>
         ))}
       </section>
-    </main>
+    </>
   );
 }
